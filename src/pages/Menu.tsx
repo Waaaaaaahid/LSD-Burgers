@@ -1,0 +1,162 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, SlidersHorizontal } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import type { MenuItem, Category } from '@/types';
+import { FoodCard } from '@/components/FoodCard';
+import { ItemModal } from '@/components/ItemModal';
+import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
+
+export function Menu() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [vegOnly, setVegOnly] = useState(false);
+  const { addItem } = useCart();
+  const { show } = useToast();
+
+  const activeCategory = searchParams.get('cat') || 'all';
+
+  useEffect(() => {
+    (async () => {
+      const [itemRes, catRes] = await Promise.all([
+        supabase.from('menu_items').select('*, category:categories(*)').order('sort_order'),
+        supabase.from('categories').select('*').order('sort_order'),
+      ]);
+      if (itemRes.data) setItems(itemRes.data as MenuItem[]);
+      if (catRes.data) setCategories(catRes.data as Category[]);
+      setLoading(false);
+    })();
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      if (activeCategory !== 'all' && item.category?.slug !== activeCategory) return false;
+      if (vegOnly && !item.is_veg) return false;
+      if (search && !item.name.toLowerCase().includes(search.toLowerCase()) && !item.description.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+  }, [items, activeCategory, vegOnly, search]);
+
+  const handleCategoryChange = (slug: string) => {
+    if (slug === 'all') {
+      searchParams.delete('cat');
+    } else {
+      searchParams.set('cat', slug);
+    }
+    setSearchParams(searchParams);
+  };
+
+  const handleQuickAdd = (item: MenuItem) => {
+    if (item.customizations && item.customizations.length > 0) {
+      setSelectedItem(item);
+    } else {
+      addItem(item, 1, []);
+      show(`${item.name} added to cart`, 'success');
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 animate-fade-in">
+      <div className="mb-6">
+        <h1 className="font-display text-4xl sm:text-5xl tracking-tight text-lsd-gray-900 mb-1">The Menu</h1>
+        <p className="text-sm text-lsd-gray-500">Bold flavours. Big portions. Dope food.</p>
+      </div>
+
+      {/* Search + Filter */}
+      <div className="flex gap-3 mb-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lsd-gray-400" />
+          <input
+            type="text"
+            placeholder="Search for burgers, chicken, wraps..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input-field pl-10"
+          />
+        </div>
+        <button
+          onClick={() => setVegOnly(!vegOnly)}
+          className={`flex items-center gap-2 px-4 rounded-2xl border-2 transition-all ${
+            vegOnly
+              ? 'border-lsd-success bg-green-50 text-lsd-success'
+              : 'border-lsd-gray-300 bg-white text-lsd-gray-500'
+          }`}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          <span className="text-sm font-semibold hidden sm:inline">Veg Only</span>
+        </button>
+      </div>
+
+      {/* Category Nav */}
+      <div className="sticky top-16 z-30 -mx-4 px-4 sm:mx-0 sm:px-0 py-3 bg-white/90 backdrop-blur-lg mb-6 rounded-xl">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => handleCategoryChange('all')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
+              activeCategory === 'all'
+                ? 'bg-lsd-blue text-white shadow-blue'
+                : 'bg-lsd-gray-100 text-lsd-gray-600 hover:bg-lsd-blue-lightest hover:text-lsd-blue'
+            }`}
+          >
+            All Items
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryChange(cat.slug)}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
+                activeCategory === cat.slug
+                  ? 'bg-lsd-blue text-white shadow-blue'
+                  : 'bg-lsd-gray-100 text-lsd-gray-600 hover:bg-lsd-blue-lightest hover:text-lsd-blue'
+              }`}
+            >
+              {cat.icon} {cat.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Items Grid */}
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="card">
+              <div className="skeleton h-44" />
+              <div className="p-3.5 space-y-2">
+                <div className="skeleton h-4 w-3/4" />
+                <div className="skeleton h-3 w-full" />
+                <div className="skeleton h-6 w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-20 h-20 rounded-full bg-lsd-gray-100 border border-lsd-gray-200 flex items-center justify-center mb-4">
+            <Search className="w-10 h-10 text-lsd-gray-300" />
+          </div>
+          <p className="text-lsd-gray-500">No items found. Try a different search or category.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-20">
+          {filteredItems.map((item) => (
+            <FoodCard
+              key={item.id}
+              item={item}
+              onAdd={handleQuickAdd}
+              onQuickAdd={handleQuickAdd}
+              onClick={setSelectedItem}
+            />
+          ))}
+        </div>
+      )}
+
+      <ItemModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+    </div>
+  );
+}

@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-lsd-gray-50 text-lsd-gray-900 font-sans antialiased;
+    overscroll-behavior-y: none;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-lsd-gray-100;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-lsd-blue-light rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-lsd-blue;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-lsd-blue text-white font-bold uppercase tracking-wide transition-all duration-200 hover:bg-lsd-blue-dark hover:shadow-blue active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-white text-lsd-blue font-bold uppercase tracking-wide border-2 border-lsd-blue transition-all duration-200 hover:bg-lsd-blue hover:text-white hover:border-lsd-blue active:scale-95;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-lsd-gray-600 font-medium transition-all duration-200 hover:bg-lsd-blue-lightest hover:text-lsd-blue;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-lsd-gray-200 overflow-hidden transition-all duration-300;
+  }
+  .card-hover {
+    @apply hover:shadow-card-hover hover:border-lsd-blue-lighter hover:-translate-y-0.5;
+  }
+  .input-field {
+    @apply w-full bg-white border border-lsd-gray-300 rounded-xl px-4 py-3 text-lsd-gray-900 placeholder-lsd-gray-400 focus:outline-none focus:border-lsd-blue focus:ring-2 focus:ring-lsd-blue-lightest transition-all;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded-xl;
+  }
+  .veg-dot {
+    @apply inline-flex items-center justify-center w-4 h-4 rounded-sm border-2;
+  }
+  .veg-dot-veg {
+    @apply border-lsd-success;
+  }
+  .veg-dot-veg::after {
+    content: '';
+    @apply block w-2 h-2 rounded-full bg-lsd-success;
+  }
+  .veg-dot-nonveg {
+    @apply border-lsd-error;
+  }
+  .veg-dot-nonveg::after {
+    content: '';
+    @apply block w-2 h-2 rounded-full bg-lsd-error;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+  }
+  .section-eyebrow {
+    @apply text-lsd-blue font-bold text-sm uppercase tracking-widest;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bg-grid {
+    background-image: radial-gradient(circle, rgba(11, 95, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+}
