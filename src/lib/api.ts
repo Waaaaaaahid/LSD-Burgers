@@ -1,4 +1,4 @@
-const API_URL = (import.meta.env.VITE_API_URL || 'https://lsd-burgers-api.onrender.com').replace(/\/$/, '');
+const API_URL = (import.meta.env.VITE_API_URL || 'https://lsd-burgers-api-91xf.onrender.com').replace(/\/$/, '');
 
 export async function api<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lsd-auth-token') : null;
@@ -8,7 +8,7 @@ export async function api<T = any>(path: string, options: RequestInit = {}): Pro
 
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, { ...options, headers, mode: 'cors', credentials: 'omit' });
+    response = await fetch(`${API_URL}${path}`, { ...options, headers, mode: 'cors', credentials: 'omit', cache: 'no-store' });
   } catch {
     throw new Error('Unable to connect to the server. Please try again in a few seconds.');
   }
