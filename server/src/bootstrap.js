@@ -76,4 +76,8 @@ async function seed() {
 }
 
 await seed();
+// bootstrap.js and server.js share the same Mongoose instance. Remove the seed models
+// before server.js registers its own schemas, otherwise Mongoose throws OverwriteModelError.
+if (mongoose.models.Category) mongoose.deleteModel('Category');
+if (mongoose.models.MenuItem) mongoose.deleteModel('MenuItem');
 await import('./server.js');
