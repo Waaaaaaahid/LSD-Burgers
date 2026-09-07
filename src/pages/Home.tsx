@@ -1,186 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Flame, Truck, Clock, Star, UtensilsCrossed } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { ArrowRight, Flame, Truck, Clock, UtensilsCrossed } from 'lucide-react';
+import { api } from '@/lib/api';
 import type { MenuItem, Category } from '@/types';
 import { FoodCard } from '@/components/FoodCard';
 import { ItemModal } from '@/components/ItemModal';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useRestaurant } from '@/context/RestaurantContext';
-
 export function Home() {
-  const [bestsellers, setBestsellers] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const { addItem } = useCart();
-  const { show } = useToast();
-  const { settings } = useRestaurant();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    (async () => {
-      const [bestRes, catRes] = await Promise.all([
-        supabase.from('menu_items').select('*, category:categories(*)').eq('is_bestseller', true).eq('is_available', true).order('sort_order').limit(6),
-        supabase.from('categories').select('*').order('sort_order'),
-      ]);
-      if (bestRes.data) setBestsellers(bestRes.data as MenuItem[]);
-      if (catRes.data) setCategories(catRes.data as Category[]);
-      setLoading(false);
-    })();
-  }, []);
-
-  const handleQuickAdd = (item: MenuItem) => {
-    if (item.customizations && item.customizations.length > 0) {
-      setSelectedItem(item);
-    } else {
-      addItem(item, 1, []);
-      show(`${item.name} added to cart`, 'success');
-    }
-  };
-
-  return (
-    <div className="animate-fade-in">
-      {/* HERO */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-lsd-blue-deep">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.pexels.com/photos/18987002/pexels-photo-18987002.jpeg?auto=compress&cs=tinysrgb&h=900&w=1400"
-            alt="LSD burgers"
-            className="w-full h-full object-cover opacity-50"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-lsd-blue-deep via-lsd-blue-deep/80 to-lsd-blue/40" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full">
-          <div className="max-w-xl space-y-6 animate-slide-up">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
-              <Flame className="w-4 h-4 text-lsd-accent" />
-              <span className="text-xs font-bold text-white uppercase tracking-widest">Now Open in Okhla</span>
-            </div>
-            <h1 className="font-display text-6xl sm:text-7xl md:text-8xl leading-[0.9] text-white">
-              LIKE<br />SOMETHING<br />
-              <span className="text-lsd-accent">DOPE?</span>
-            </h1>
-            <p className="text-lg text-blue-100 max-w-md">
-              Burgers. Crispy Chicken. Big Flavours. The doppest fast food in Jamia Nagar.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button onClick={() => navigate('/menu')} className="btn-primary !bg-white !text-lsd-blue hover:!bg-blue-50 text-base px-8 py-4">
-                Order Now <ArrowRight className="w-5 h-5" />
-              </button>
-              <button onClick={() => navigate('/menu')} className="btn-secondary !bg-transparent !text-white !border-white hover:!bg-white hover:!text-lsd-blue text-base px-8 py-4">
-                Explore Menu
-              </button>
-            </div>
-            <div className="flex items-center gap-6 pt-2">
-              <div className="flex items-center gap-2 text-sm text-blue-100">
-                <Truck className="w-4 h-4 text-lsd-accent" />
-                Free delivery over {settings ? `\u20B9${settings.min_order_amount}` : '\u20B999'}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-blue-100">
-                <Clock className="w-4 h-4 text-lsd-accent" />
-                Open till {settings?.closing_time || 'late'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURES STRIP */}
-      <section className="bg-lsd-blue text-white py-3">
-        <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-1 text-center">
-          {['Big Bold Flavours', 'Crispy Fried Chicken', 'Fresh Burgers Daily', 'Fast Delivery'].map((t, i) => (
-            <span key={i} className="font-display text-sm tracking-wide">{t}</span>
-          ))}
-        </div>
-      </section>
-
-      {/* BEST SELLERS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <p className="section-eyebrow mb-1">Most Loved</p>
-            <h2 className="font-display text-4xl sm:text-5xl tracking-tight text-lsd-gray-900">The Dopdest Picks</h2>
-          </div>
-          <button onClick={() => navigate('/menu')} className="hidden sm:flex items-center gap-1 text-sm text-lsd-blue font-semibold hover:gap-2 transition-all">
-            View All <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="card">
-                <div className="skeleton h-44" />
-                <div className="p-3.5 space-y-2">
-                  <div className="skeleton h-4 w-3/4" />
-                  <div className="skeleton h-3 w-full" />
-                  <div className="skeleton h-6 w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {bestsellers.map((item) => (
-              <FoodCard
-                key={item.id}
-                item={item}
-                onAdd={handleQuickAdd}
-                onQuickAdd={handleQuickAdd}
-                onClick={setSelectedItem}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* CATEGORIES */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="mb-8 text-center">
-            <p className="section-eyebrow mb-1">Browse</p>
-            <h2 className="font-display text-4xl sm:text-5xl tracking-tight text-lsd-gray-900">Categories</h2>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => navigate(`/menu?cat=${cat.slug}`)}
-                className="card card-hover group p-4 flex flex-col items-center gap-2"
-              >
-                <span className="text-3xl group-hover:scale-110 transition-transform">{cat.icon || '\uD83C\uDF54'}</span>
-                <span className="text-xs font-semibold text-lsd-gray-700 text-center leading-tight">{cat.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA BANNER */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
-        <div className="relative rounded-3xl overflow-hidden bg-lsd-blue-deep shadow-blue">
-          <img
-            src="https://images.pexels.com/photos/5488052/pexels-photo-5488052.jpeg?auto=compress&cs=tinysrgb&h=600&w=1400"
-            alt="LSD combo meal"
-            className="w-full h-48 sm:h-64 object-cover opacity-40"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-lsd-blue-deep via-lsd-blue-deep/80 to-transparent flex items-center">
-            <div className="p-8 sm:p-12 max-w-md space-y-3">
-              <UtensilsCrossed className="w-10 h-10 text-lsd-accent" />
-              <h3 className="font-display text-3xl sm:text-4xl text-white">Hungry Yet?</h3>
-              <p className="text-sm text-blue-100">Order your favourite LSD meal now and get it delivered hot to your door.</p>
-              <button onClick={() => navigate('/menu')} className="btn-primary !bg-white !text-lsd-blue hover:!bg-blue-50">
-                Start Ordering <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ItemModal item={selectedItem} onClose={() => setSelectedItem(null)} />
-    </div>
-  );
+  const [bestsellers,setBestsellers]=useState<MenuItem[]>([]); const [categories,setCategories]=useState<Category[]>([]); const [loading,setLoading]=useState(true); const [selectedItem,setSelectedItem]=useState<MenuItem|null>(null); const {addItem}=useCart(); const {show}=useToast(); const {settings}=useRestaurant(); const navigate=useNavigate();
+  useEffect(()=>{(async()=>{try{const [b,c]=await Promise.all([api<{data:MenuItem[]}>('/api/menu?bestseller=true'),api<{data:Category[]}>('/api/categories')]);setBestsellers(b.data);setCategories(c.data);}catch(e){console.error(e);show('Failed to load menu','error')}finally{setLoading(false)}})()},[show]);
+  const handleQuickAdd=(item:MenuItem)=>{if(item.customizations?.length){setSelectedItem(item)}else{addItem(item,1,[]);show(`${item.name} added to cart`,'success')}};
+  return <div className="animate-fade-in">
+    <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-lsd-blue-deep"><div className="absolute inset-0"><img src="https://images.pexels.com/photos/18987002/pexels-photo-18987002.jpeg?auto=compress&cs=tinysrgb&h=900&w=1400" alt="LSD burgers" className="w-full h-full object-cover opacity-50"/><div className="absolute inset-0 bg-gradient-to-br from-lsd-blue-deep via-lsd-blue-deep/80 to-lsd-blue/40"/></div><div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full"><div className="max-w-xl space-y-6 animate-slide-up"><div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm"><Flame className="w-4 h-4 text-lsd-accent"/><span className="text-xs font-bold text-white uppercase tracking-widest">Now Open in Okhla</span></div><h1 className="font-display text-6xl sm:text-7xl md:text-8xl leading-[0.9] text-white">LIKE<br/>SOMETHING<br/><span className="text-lsd-accent">DOPE?</span></h1><p className="text-lg text-blue-100 max-w-md">Burgers. Crispy Chicken. Big Flavours. The doppest fast food in Jamia Nagar.</p><div className="flex flex-col sm:flex-row gap-3"><button onClick={()=>navigate('/menu')} className="btn-primary !bg-white !text-lsd-blue hover:!bg-blue-50 text-base px-8 py-4">Order Now <ArrowRight className="w-5 h-5"/></button><button onClick={()=>navigate('/menu')} className="btn-secondary !bg-transparent !text-white !border-white hover:!bg-white hover:!text-lsd-blue text-base px-8 py-4">Explore Menu</button></div><div className="flex items-center gap-6 pt-2"><div className="flex items-center gap-2 text-sm text-blue-100"><Truck className="w-4 h-4 text-lsd-accent"/>Free delivery over {settings?`₹${settings.min_order_amount}`:'₹99'}</div><div className="flex items-center gap-2 text-sm text-blue-100"><Clock className="w-4 h-4 text-lsd-accent"/>Open till {settings?.closing_time||'late'}</div></div></div></div></section>
+    <section className="bg-lsd-blue text-white py-3"><div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-1 text-center">{['Big Bold Flavours','Crispy Fried Chicken','Fresh Burgers Daily','Fast Delivery'].map((t,i)=><span key={i} className="font-display text-sm tracking-wide">{t}</span>)}</div></section>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16"><div className="flex items-end justify-between mb-8"><div><p className="section-eyebrow mb-1">Most Loved</p><h2 className="font-display text-4xl sm:text-5xl tracking-tight text-lsd-gray-900">The Dopdest Picks</h2></div><button onClick={()=>navigate('/menu')} className="hidden sm:flex items-center gap-1 text-sm text-lsd-blue font-semibold hover:gap-2 transition-all">View All <ArrowRight className="w-4 h-4"/></button></div>{loading?<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">{Array.from({length:4}).map((_,i)=><div key={i} className="card"><div className="skeleton h-44"/><div className="p-3.5 space-y-2"><div className="skeleton h-4 w-3/4"/><div className="skeleton h-3 w-full"/><div className="skeleton h-6 w-1/2"/></div></div>)}</div>:<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">{bestsellers.map(item=><FoodCard key={item.id} item={item} onAdd={handleQuickAdd} onQuickAdd={handleQuickAdd} onClick={setSelectedItem}/>)}</div>}</section>
+    <section className="bg-white py-16"><div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="mb-8 text-center"><p className="section-eyebrow mb-1">Browse</p><h2 className="font-display text-4xl sm:text-5xl tracking-tight text-lsd-gray-900">Categories</h2></div><div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-3">{categories.map(cat=><button key={cat.id} onClick={()=>navigate(`/menu?cat=${cat.slug}`)} className="card card-hover group p-4 flex flex-col items-center gap-2"><span className="text-3xl group-hover:scale-110 transition-transform">{cat.icon||'🍔'}</span><span className="text-xs font-semibold text-lsd-gray-700 text-center leading-tight">{cat.name}</span></button>)}</div></div></section>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16"><div className="relative rounded-3xl overflow-hidden bg-lsd-blue-deep shadow-blue"><img src="https://images.pexels.com/photos/5488052/pexels-photo-5488052.jpeg?auto=compress&cs=tinysrgb&h=600&w=1400" alt="LSD combo meal" className="w-full h-48 sm:h-64 object-cover opacity-40"/><div className="absolute inset-0 bg-gradient-to-r from-lsd-blue-deep via-lsd-blue-deep/80 to-transparent flex items-center"><div className="p-8 sm:p-12 max-w-md space-y-3"><UtensilsCrossed className="w-10 h-10 text-lsd-accent"/><h3 className="font-display text-3xl sm:text-4xl text-white">Hungry Yet?</h3><p className="text-sm text-blue-100">Order your favourite LSD meal now and get it delivered hot to your door.</p><button onClick={()=>navigate('/menu')} className="btn-primary !bg-white !text-lsd-blue hover:!bg-blue-50">Start Ordering <ArrowRight className="w-4 h-4"/></button></div></div></div></section>
+    <ItemModal item={selectedItem} onClose={()=>setSelectedItem(null)}/>
+  </div>;
 }
