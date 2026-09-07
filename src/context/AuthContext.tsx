@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { api, clearToken, saveToken } from '@/lib/api';
 import type { Profile } from '@/types';
 
+export interface AuthSession { access_token: string; user: { id: string; email: string } }
 interface AuthContextValue {
-  session: Session | null;
+  session: AuthSession | null;
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
@@ -12,86 +12,48 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
-
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      if (!data.session) setLoading(false);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      if (!newSession) {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!session) return;
-    (async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-      if (error || !data) {
-        setProfile(null);
-      } else {
-        setProfile(data as Profile);
-      }
-      setLoading(false);
-    })();
-  }, [session]);
-
-  const signIn: AuthContextValue['signIn'] = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+  const loadUser = async () => {
+    try {
+      const result = await api<{ user: Profile & { email: string } }>('/api/auth/me');
+      setProfile(result.user);
+      setSession({ access_token: localStorage.getItem('lsd-auth-token')!, user: { id: result.user.id, email: result.user.email } });
+    } catch {
+      clearToken(); setSession(null); setProfile(null);
+    } finally { setLoading(false); }
   };
 
-  const signUp: AuthContextValue['signUp'] = async (email, password, name, phone) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, phone } },
-    });
-    return { error: error?.message ?? null };
+  useEffect(() => { if (localStorage.getItem('lsd-auth-token')) loadUser(); else setLoading(false); }, []);
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const result = await api<{ token: string; user: Profile & { email: string } }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      saveToken(result.token);
+      setSession({ access_token: result.token, user: { id: result.user.id, email: result.user.email } });
+      setProfile(result.user);
+      return { error: null };
+    } catch (e) { return { error: e instanceof Error ? e.message : 'Sign in failed' }; }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
+  const signUp = async (email: string, password: string, name: string, phone: string) => {
+    try {
+      const result = await api<{ token: string; user: Profile & { email: string } }>('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, name, phone }) });
+      saveToken(result.token);
+      setSession({ access_token: result.token, user: { id: result.user.id, email: result.user.email } });
+      setProfile(result.user);
+      return { error: null };
+    } catch (e) { return { error: e instanceof Error ? e.message : 'Sign up failed' }; }
   };
 
-  const refreshProfile = async () => {
-    if (!session) return;
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .maybeSingle();
-    if (data) setProfile(data as Profile);
-  };
+  const signOut = async () => { clearToken(); setSession(null); setProfile(null); };
+  const refreshProfile = async () => { if (session) await loadUser(); };
 
-  return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, refreshProfile }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, refreshProfile }}>{children}</AuthContext.Provider>;
 }
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
-}
+export function useAuth() { const ctx = useContext(AuthContext); if (!ctx) throw new Error('useAuth must be used within AuthProvider'); return ctx; }
