@@ -6,11 +6,12 @@ export async function api<T = any>(path: string, options: RequestInit = {}): Pro
   if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-    mode: 'cors',
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, { ...options, headers, mode: 'cors', credentials: 'omit' });
+  } catch {
+    throw new Error('Unable to connect to the server. Please try again in a few seconds.');
+  }
 
   const text = await response.text();
   let data: any = {};
