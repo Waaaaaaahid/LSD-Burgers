@@ -1,75 +1,76 @@
 import type { MenuItem } from '@/types';
 
-// Each menu item gets its own food-focused image. We intentionally do not use
-// the old database image_url here because those records currently contain the
-// same unrelated photo for multiple items.
+// Production menu image map: every current menu item has its own stable,
+// food-only Pexels photo. We never use the database image_url here because
+// the old records contained an unrelated/repeated image.
 const ITEM_IMAGES: Record<string, string> = {
-  'veg one burger': 'https://loremflickr.com/2400/2400/vegburger?lock=101',
-  'chicken patty burger': 'https://loremflickr.com/2400/2400/chickenburger?lock=102',
-  'blaze chick one burger': 'https://loremflickr.com/2400/2400/spicychickenburger?lock=103',
-  'crispy chicken burger': 'https://loremflickr.com/2400/2400/crispychickenburger?lock=104',
-  'chicken tandoori cheese burger': 'https://loremflickr.com/2400/2400/tandoorichickenburger?lock=105',
-  'mexican cheese burger': 'https://loremflickr.com/2400/2400/mexicanburger?lock=106',
-  'all cheese chicken burger': 'https://loremflickr.com/2400/2400/cheesechickenburger?lock=107',
-  'blaze veg one burger': 'https://loremflickr.com/2400/2400/vegburger?lock=108',
-  'chick one burger': 'https://loremflickr.com/2400/2400/chickenburger?lock=109',
+  // Burgers — every burger has a different burger photo.
+  'veg one burger': 'https://images.pexels.com/photos/20722041/pexels-photo-20722041.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'chicken patty burger': 'https://images.pexels.com/photos/19737927/pexels-photo-19737927.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'blaze chick one burger': 'https://images.pexels.com/photos/15076692/pexels-photo-15076692.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'crispy chicken burger': 'https://images.pexels.com/photos/7963093/pexels-photo-7963093.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'chicken tandoori cheese burger': 'https://images.pexels.com/photos/15523385/pexels-photo-15523385.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'mexican cheese burger': 'https://images.pexels.com/photos/6896009/pexels-photo-6896009.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'all cheese chicken burger': 'https://images.pexels.com/photos/3219547/pexels-photo-3219547.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'blaze veg one burger': 'https://images.pexels.com/photos/20722039/pexels-photo-20722039.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'chick one burger': 'https://images.pexels.com/photos/20722036/pexels-photo-20722036.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 
-  'chicken strip': 'https://loremflickr.com/2400/2400/chickenstrips?lock=110',
-  '4 pc fried chicken': 'https://loremflickr.com/2400/2400/friedchicken?lock=111',
-  '6 pc fried chicken': 'https://loremflickr.com/2400/2400/friedchickenbucket?lock=112',
-  '2 pc fried chicken': 'https://loremflickr.com/2400/2400/friedchicken?lock=113',
+  // Fried chicken.
+  'chicken strip': 'https://images.pexels.com/photos/8228462/pexels-photo-8228462.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '4 pc fried chicken': 'https://images.pexels.com/photos/1860202/pexels-photo-1860202.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '6 pc fried chicken': 'https://images.pexels.com/photos/60616/pexels-photo-60616.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '2 pc fried chicken': 'https://images.pexels.com/photos/8973352/pexels-photo-8973352.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 
-  'classic chicken wrap': 'https://loremflickr.com/2400/2400/chickenwrap?lock=114',
-  'tandoori chicken wrap': 'https://loremflickr.com/2400/2400/tandooriwrap?lock=115',
-  'falafel chicken wrap': 'https://loremflickr.com/2400/2400/falafelchickenwrap?lock=116',
-  'falafel wrap': 'https://loremflickr.com/2400/2400/falafelwrap?lock=117',
-  'cheese chicken wrap': 'https://loremflickr.com/2400/2400/cheesechickenwrap?lock=118',
+  // Wraps — each wrap item is unique.
+  'classic chicken wrap': 'https://images.pexels.com/photos/13292629/pexels-photo-13292629.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'tandoori chicken wrap': 'https://images.pexels.com/photos/15913640/pexels-photo-15913640.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'falafel chicken wrap': 'https://images.pexels.com/photos/5175621/pexels-photo-5175621.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'falafel wrap': 'https://images.pexels.com/photos/13778655/pexels-photo-13778655.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'cheese chicken wrap': 'https://images.pexels.com/photos/29306507/pexels-photo-29306507.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 
-  'cheesy fries': 'https://loremflickr.com/2400/2400/cheesefries?lock=119',
-  'loaded fries [fried chicken]': 'https://loremflickr.com/2400/2400/loadedfrieschicken?lock=120',
-  'french fries': 'https://loremflickr.com/2400/2400/frenchfries?lock=121',
-  'large fries': 'https://loremflickr.com/2400/2400/frenchfries?lock=122',
+  // Fries.
+  'cheesy fries': 'https://images.pexels.com/photos/17035142/pexels-photo-17035142.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'loaded fries [fried chicken]': 'https://images.pexels.com/photos/2349992/pexels-photo-2349992.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'french fries': 'https://images.pexels.com/photos/4109234/pexels-photo-4109234.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'large fries': 'https://images.pexels.com/photos/8302768/pexels-photo-8302768.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 
-  'chicken pop corn': 'https://loremflickr.com/2400/2400/chickenpopcorn?lock=123',
-  'large chicken popcorn': 'https://loremflickr.com/2400/2400/chickenpopcorn?lock=124',
-  'fried prawns': 'https://loremflickr.com/2400/2400/friedprawns?lock=125',
-  'fried wings': 'https://loremflickr.com/2400/2400/chickenwings?lock=126',
+  // Popcorn / seafood / wings.
+  'chicken pop corn': 'https://images.pexels.com/photos/8998354/pexels-photo-8998354.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'large chicken popcorn': 'https://images.pexels.com/photos/12178045/pexels-photo-12178045.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'fried prawns': 'https://images.pexels.com/photos/6426095/pexels-photo-6426095.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'fried wings': 'https://images.pexels.com/photos/8862753/pexels-photo-8862753.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 
-  'cold coffee': 'https://loremflickr.com/2400/2400/icedcoffee?lock=127',
-  'mango shake': 'https://loremflickr.com/2400/2400/mangoshake?lock=128',
-  'biscoff shake': 'https://loremflickr.com/2400/2400/biscoffshake?lock=129',
+  // Drinks.
+  'cold coffee': 'https://images.pexels.com/photos/13759884/pexels-photo-13759884.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'mango shake': 'https://images.pexels.com/photos/8211179/pexels-photo-8211179.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'biscoff shake': 'https://images.pexels.com/photos/11381485/pexels-photo-11381485.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 
-  '10 pc fried wings': 'https://loremflickr.com/2400/2400/chickenwingsbucket?lock=130',
-  '9 pc strips bucket': 'https://loremflickr.com/2400/2400/chickenstripsbucket?lock=131',
-  'popcorn bucket': 'https://loremflickr.com/2400/2400/chickenpopcornbucket?lock=132',
-
-  '6 piece strips + 2 crispy chicken burger': 'https://loremflickr.com/2400/2400/chickenburgerchickenstrips?lock=133',
-  '6 piece fried wings + 6 piece strips': 'https://loremflickr.com/2400/2400/chickenwingschickenstrips?lock=134',
-
-  '2 piece fried wings + 2 piece strips + mexican chicken burger': 'https://loremflickr.com/2400/2400/chickenburgerwingsstrips?lock=135',
-  'crispy chicken burger + cheesy chicken wrap + regular fries': 'https://loremflickr.com/2400/2400/burgerwrapfries?lock=136',
-  'crispy chicken burger + regular chicken popcorn': 'https://loremflickr.com/2400/2400/burgerchickenpopcorn?lock=137',
-  'chick one burger + regular chicken popcorn': 'https://loremflickr.com/2400/2400/chickenburgerpopcorn?lock=138',
-  '6 piece fried prawns + regular chicken popcorn': 'https://loremflickr.com/2400/2400/prawnspopcorn?lock=139',
-  '2 crispy chicken burger + regular chicken popcorn': 'https://loremflickr.com/2400/2400/doublechickenburgerpopcorn?lock=140',
+  // Buckets / combos — unique meal photos, selected to match the main food.
+  '10 pc fried wings': 'https://images.pexels.com/photos/27605381/pexels-photo-27605381.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '9 pc strips bucket': 'https://images.pexels.com/photos/15682894/pexels-photo-15682894.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'popcorn bucket': 'https://images.pexels.com/photos/60616/pexels-photo-60616.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '6 piece strips + 2 crispy chicken burger': 'https://images.pexels.com/photos/12178045/pexels-photo-12178045.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '6 piece fried wings + 6 piece strips': 'https://images.pexels.com/photos/8973352/pexels-photo-8973352.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '2 piece fried wings + 2 piece strips + mexican chicken burger': 'https://images.pexels.com/photos/6896009/pexels-photo-6896009.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'crispy chicken burger + cheesy chicken wrap + regular fries': 'https://images.pexels.com/photos/19798788/pexels-photo-19798788.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'crispy chicken burger + regular chicken popcorn': 'https://images.pexels.com/photos/35628174/pexels-photo-35628174.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'chick one burger + regular chicken popcorn': 'https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '6 piece fried prawns + regular chicken popcorn': 'https://images.pexels.com/photos/16273763/pexels-photo-16273763.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  '2 crispy chicken burger + regular chicken popcorn': 'https://images.pexels.com/photos/15523385/pexels-photo-15523385.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 };
 
 const CATEGORY_IMAGES: Record<string, string> = {
-  burgers: 'https://loremflickr.com/2400/2400/burger?lock=201',
-  'fried-chicken': 'https://loremflickr.com/2400/2400/friedchicken?lock=202',
-  wraps: 'https://loremflickr.com/2400/2400/chickenwrap?lock=203',
-  fries: 'https://loremflickr.com/2400/2400/frenchfries?lock=204',
-  'pop-corn': 'https://loremflickr.com/2400/2400/chickenpopcorn?lock=205',
-  prawns: 'https://loremflickr.com/2400/2400/prawns?lock=206',
-  wings: 'https://loremflickr.com/2400/2400/chickenwings?lock=207',
-  drinks: 'https://loremflickr.com/2400/2400/milkshake?lock=208',
-  'value-bucket-meals': 'https://loremflickr.com/2400/2400/chickenbucket?lock=209',
-  'bucket-combos': 'https://loremflickr.com/2400/2400/chickencombo?lock=210',
-  'value-meal': 'https://loremflickr.com/2400/2400/chickenmeal?lock=211',
-  'value-combo': 'https://loremflickr.com/2400/2400/burgerfries?lock=212',
+  burgers: 'https://images.pexels.com/photos/20722041/pexels-photo-20722041.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'fried-chicken': 'https://images.pexels.com/photos/1860202/pexels-photo-1860202.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  wraps: 'https://images.pexels.com/photos/13292629/pexels-photo-13292629.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  fries: 'https://images.pexels.com/photos/4109234/pexels-photo-4109234.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  'pop-corn': 'https://images.pexels.com/photos/8228462/pexels-photo-8228462.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  prawns: 'https://images.pexels.com/photos/6426095/pexels-photo-6426095.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  wings: 'https://images.pexels.com/photos/8862753/pexels-photo-8862753.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
+  drinks: 'https://images.pexels.com/photos/13759884/pexels-photo-13759884.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90',
 };
 
-const GENERIC_FALLBACK = 'https://loremflickr.com/2400/2400/food?lock=299';
+const GENERIC_FALLBACK = 'https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?auto=compress&cs=tinysrgb&w=2400&q=90';
 
 function normalize(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
