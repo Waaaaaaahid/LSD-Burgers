@@ -1,6 +1,7 @@
 import { Plus, Star } from 'lucide-react';
 import type { MenuItem } from '@/types';
 import { formatPrice } from '@/lib/format';
+import { getFoodImage } from '@/lib/foodImages';
 
 export function FoodCard({ item, onAdd, onQuickAdd, onClick }: {
   item: MenuItem;
@@ -15,10 +16,17 @@ export function FoodCard({ item, onAdd, onQuickAdd, onClick }: {
     >
       <div className="relative h-40 sm:h-44 overflow-hidden">
         <img
-          src={item.image_url}
+          src={getFoodImage(item)}
           alt={item.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (!img.dataset.fallback) {
+              img.dataset.fallback = '1';
+              img.src = 'https://loremflickr.com/800/800/food?lock=99';
+            }
+          }}
         />
         {item.is_bestseller && (
           <span className="absolute top-2 left-2 badge bg-lsd-blue text-white">
