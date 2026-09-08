@@ -9,10 +9,10 @@ import jwt from 'jsonwebtoken';
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 const JWT_SECRET = process.env.JWT_SECRET;
-const clientOrigins = (process.env.CLIENT_URL || 'https://lsdburgers.vercel.app').split(',').map(x => x.trim()).filter(Boolean);
+const clientOrigins = (process.env.CLIENT_URL || 'https://lsdburgers.vercel.app').split(',').map(x => x.trim().replace(/\/$/, '')).filter(Boolean);
 
 app.use(helmet());
-app.use(cors({ origin: (origin, cb) => !origin || clientOrigins.includes(origin) ? cb(null, true) : cb(null, false), credentials: false }));
+app.use(cors({ origin: (origin, cb) => !origin || clientOrigins.includes(origin?.replace(/\/$/, '')) ? cb(null, true) : cb(null, false), credentials: false }));
 app.use(express.json({ limit: '2mb' }));
 
 const userSchema = new mongoose.Schema({ email:{type:String,required:true,unique:true,lowercase:true,trim:true}, passwordHash:{type:String,required:true}, name:{type:String,required:true,trim:true}, phone:{type:String,default:''}, is_admin:{type:Boolean,default:false} }, {timestamps:{createdAt:'created_at',updatedAt:'updated_at'}});
@@ -75,5 +75,27 @@ const menu=[['Burgers','Veg One Burger',79,true],['Burgers','Chicken patty burge
 
 async function seed(){for(let i=0;i<categories.length;i++){const [name,slug,icon]=categories[i];await Category.findOneAndUpdate({slug},{name,slug,icon,sort_order:i},{upsert:true,new:true,setDefaultsOnInsert:true});}const count=await MenuItem.countDocuments();if(count===0){const map=Object.fromEntries((await Category.find()).map(c=>[c.name,c]));await MenuItem.insertMany(menu.map(([category,name,price,is_veg],i)=>({category_id:map[category]._id,name,price,is_veg,is_available:true,is_bestseller:i<3,sort_order:i,image_url:'',description:'Freshly made at LSD Burgers.',customizations:[]})));console.log('Seeded LSD menu');}await RestaurantSettings.updateOne({_id:1},{$setOnInsert:{_id:1}},{upsert:true});}
 
-async function start(){if(!JWT_SECRET)throw new Error('JWT_SECRET is required');if(!process.env.MONGODB_URI)throw new Error('MONGODB_URI is required');await mongoose.connect(process.env.MONGODB_URI);console.log('MongoDB connected');await seed();app.listen(PORT,'0.0.0.0',()=>console.log(`LSD Burgers API listening on ${PORT}`));}
+async function seedAdmin(){
+  const email=String(process.env.ADMIN_EMAIL||'').trim().toLowerCase();
+  const password=String(process.env.ADMIN_PASSWORD||'');
+  if(!email && !password)return;
+  if(!email || password.length<12){
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD (minimum 12 characters) are required together');
+  }
+  const name=String(process.env.ADMIN_NAME||'LSD Burgers Admin').trim();
+  const phone=String(process.env.ADMIN_PHONE||'').trim();
+  let admin=await User.findOne({email});
+  if(!admin){
+    admin=await User.create({email,passwordHash:await bcrypt.hash(password,12),name,phone,is_admin:true});
+    console.log(`Admin account created for ${email}`);
+    return;
+  }
+  if(!admin.is_admin){
+    admin.is_admin=true;
+    await admin.save();
+    console.log(`Existing account promoted to admin: ${email}`);
+  }
+}
+
+async function start(){if(!JWT_SECRET)throw new Error('JWT_SECRET is required');if(!process.env.MONGODB_URI)throw new Error('MONGODB_URI is required');await mongoose.connect(process.env.MONGODB_URI);console.log('MongoDB connected');await seed();await seedAdmin();app.listen(PORT,'0.0.0.0',()=>console.log(`LSD Burgers API listening on ${PORT}`));}
 start().catch(e=>{console.error('STARTUP_ERROR',e);process.exit(1);});
