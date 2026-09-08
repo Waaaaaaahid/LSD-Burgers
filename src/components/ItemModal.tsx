@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Minus, Check } from 'lucide-react';
 import type { MenuItem, CustomizationGroup } from '@/types';
 import { formatPrice } from '@/lib/format';
+import { getFoodImage } from '@/lib/foodImages';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 
@@ -63,7 +64,18 @@ export function ItemModal({ item, onClose }: { item: MenuItem | null; onClose: (
         </button>
 
         <div className="relative h-56 sm:h-64 overflow-hidden rounded-t-3xl">
-          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+          <img
+            src={getFoodImage(item)}
+            alt={item.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = '1';
+                img.src = 'https://loremflickr.com/800/800/food?lock=99';
+              }
+            }}
+          />
           {item.is_bestseller && (
             <span className="absolute top-3 left-3 badge bg-lsd-blue text-white">
               Bestseller
